@@ -1,14 +1,13 @@
 #include "../Message/Message.h"
 
-#ifndef ROBBER_H
-#define ROBBER_H
-
 using namespace std;
 
 class Robber
 {
 public:
     Robber(int processes);
+
+    bool isInterestedInCriticalSection;
 
     int getLamportClock();
     void setLamportClock(int value);
@@ -30,5 +29,3 @@ private:
     priority_queue<Message> messagesQue;
     vector<int> otherClocks;
 };
-
-#endif

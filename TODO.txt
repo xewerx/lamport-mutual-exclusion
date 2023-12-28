@@ -1,0 +1,16 @@
+- sekcja krytyczna dla wiecej niz jednego procesu
+
+- Flow z kradziejem, algorytm:
+    -> IDLE: sleep(random) 
+    -> WANT_S: sekcja krytyczna(proba zajecia sprzetu S)
+    -> CITY: krazy po miescie, czyli sleep(random)
+    -> CITY: randomowo albo kogos znajdzie albo nie, gdy znajdzie to:
+        -> WANT_N: sekcja krytyczna(proba zajecia stanowiska N)
+        -> LAB: sleep(random) 
+    -> zwolnienie sprzetu S - osobny watek wysyła message RELEASE po jakims czasie
+    -> powrót do IDLE_STATE
+  
+  zeby zapętlić program wymagane będzie wprowadzenie stanów,
+  mozna zacząć od jednego "obiegu" dla kazdego procesu
+
+- diagram stanów programu

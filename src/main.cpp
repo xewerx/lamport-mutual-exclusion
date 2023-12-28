@@ -13,12 +13,19 @@
 
 using namespace std;
 
-bool IS_INTERESTED_IN_CS = false;
 mutex mut;
 
 void criticalSection()
 {
 	sleep(3);
+}
+
+void sendToAll(int size, int clock, TAG tag)
+{
+	for (int i = 0; i < size; ++i)
+	{
+		MPI_Send(&clock, 1, MPI_INT, i, tag, MPI_COMM_WORLD);
+	}
 }
 
 void handleMessage(Robber *robber, int rank, int size)
@@ -80,7 +87,7 @@ void handleMessage(Robber *robber, int rank, int size)
 
 		// sprawdz warunki i wejdz do sekcji
 		// TODO: refactor do uzywania conditional variable
-		if (IS_INTERESTED_IN_CS)
+		if (robber->isInterestedInCriticalSection)
 		{
 			Message firstMessageInQue = robber->getFirstMessageFromQue();
 
@@ -92,18 +99,19 @@ void handleMessage(Robber *robber, int rank, int size)
 			cout << "[" << rank << "]: RANK " << firstMessageInQue.sender << " " << responsesAmount << " " << currentClock << " " << isMyClockBiggest << endl;
 			robber->printVector();
 
-			// wlasne zadanie na szycie kolejki    i    mamy ack od wszystkich pozostalych ze starszym timestamp
+			// wlasne zadanie na szczycie kolejki    i    mamy ack od wszystkich pozostalych ze starszym timestamp
 			if (firstMessageInQue.sender == rank && (responsesAmount == size - 1) && isMyClockBiggest)
 			{
 				cout << "[" << rank << "]: <SEKCJA KRYTYCZNA>" << endl;
+
 				criticalSection();
-				IS_INTERESTED_IN_CS = false;
+
+				robber->isInterestedInCriticalSection = false;
 				robber->removeMessageFromQue(rank);
 				int clock = robber->getLamportClock();
-				for (int i = 0; i < size; ++i)
-				{
-					MPI_Send(&clock, 1, MPI_INT, i, RELEASE, MPI_COMM_WORLD);
-				}
+
+				sendToAll(size, clock, RELEASE);
+
 				cout << "[" << rank << "]: <KONIEC SEKCJA KRYTYCZNA>" << endl;
 			}
 		}
@@ -133,19 +141,13 @@ int main(int argc, char **argv)
 
 	thread receiverThread(handleMessage, &robber, rank, size);
 
-	// Wysyłanie REQ do kazdego
+	// Proces 0 i 2 chce wejsc do sekcji krytycznej
 	if (rank == 0 || rank == 2)
 	{
-		IS_INTERESTED_IN_CS = true;
+		robber.isInterestedInCriticalSection = true;
 		int clock = robber.incrementLamportClock();
 
-		for (int i = 0; i < size; ++i)
-		{
-			mut.lock();
-			MPI_Send(&clock, 1, MPI_INT, i, REQ, MPI_COMM_WORLD);
-			cout << "[" << rank << "]: sent " << clock << " to [" << i << "]" << endl;
-			mut.unlock();
-		}
+		sendToAll(size, clock, REQ);
 	}
 
 	receiverThread.join();

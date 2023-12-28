@@ -7,6 +7,7 @@
 
 Robber::Robber(int processes)
 {
+    isInterestedInCriticalSection = false;
     lamportClock = 0;
     otherClocks.resize(processes, -1); // puste miejsce wypełnij -1
 }
