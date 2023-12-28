@@ -5,9 +5,10 @@
 
 #include "./Robber.h"
 
-Robber::Robber()
+Robber::Robber(int processes)
 {
     lamportClock = 0;
+    otherClocks.resize(processes, -1); // puste miejsce wypełnij -1
 }
 
 int Robber::getLamportClock()
@@ -32,7 +33,7 @@ void Robber::insertMessageToQue(Message message)
 
 void Robber::removeMessageFromQue(int sender)
 {
-    std::priority_queue<Message> tempQueue;
+    priority_queue<Message> tempQueue;
 
     // Przeszukiwanie oryginalnej kolejki
     while (!messagesQue.empty())
@@ -46,7 +47,7 @@ void Robber::removeMessageFromQue(int sender)
     }
 
     // Przywracanie elementów do oryginalnej kolejki
-    messagesQue = std::move(tempQueue);
+    messagesQue = move(tempQueue);
 }
 
 Message Robber::getFirstMessageFromQue()
@@ -56,13 +57,13 @@ Message Robber::getFirstMessageFromQue()
 
 void Robber::setLastClock(int sender, int clock)
 {
-    other_clocks.at(sender) = clock;
+    otherClocks.at(sender) = clock;
 }
 
 int Robber::countResponses()
 {
     int responsesAmount = 0;
-    for (int el : other_clocks)
+    for (int el : otherClocks)
     {
         if (el != -1)
             responsesAmount++;
@@ -71,25 +72,9 @@ int Robber::countResponses()
     return responsesAmount;
 }
 
-int Robber::getLowestClockIndex()
-{
-    // Znajdź iterator do najmniejszego elementu
-    auto minElementIterator = min_element(other_clocks.begin(), other_clocks.end());
-
-    // Oblicz indeks na podstawie iteratora
-    int indexOfMinElement = distance(other_clocks.begin(), minElementIterator);
-
-    return indexOfMinElement;
-}
-
-int Robber::getClock(int index)
-{
-    return other_clocks[index];
-}
-
 bool Robber::isMyClockBiggest(int clock)
 {
-    for (int el : other_clocks)
+    for (int el : otherClocks)
     {
         if (el == -1)
             continue;
@@ -103,7 +88,7 @@ bool Robber::isMyClockBiggest(int clock)
 void Robber::printVector()
 {
     cout << "VECTOR: ";
-    for (int element : other_clocks)
+    for (int element : otherClocks)
     {
         cout << element << " ";
     }

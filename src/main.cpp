@@ -6,21 +6,15 @@
 #include <thread>
 #include <queue>
 #include <vector>
-#include <mutex> //mutex
+#include <mutex>
 
 #include "./Robber/Robber.h"
+#include "./constants.h"
 
 using namespace std;
 
 bool IS_INTERESTED_IN_CS = false;
 mutex mut;
-
-enum TAG
-{
-	REQ,
-	RELEASE,
-	ACK
-};
 
 void criticalSection()
 {
@@ -44,19 +38,13 @@ void handleMessage(Robber *robber, int rank, int size)
 		case REQ:
 		{
 			mut.lock(); // zawsze po wysłaniu sie odblokuje
-
 			cout << "[" << rank << "]: received REQ " << receivedClock << " from [" << status.MPI_SOURCE << "]" << endl;
 
 			robber->insertMessageToQue(Message(status.MPI_SOURCE, receivedClock));
-			// robber->getFirstMessageFromQue();
-
-			// Aktualizacja wektora zegarow innych procesow
-			// robber->setLastClock(status.MPI_SOURCE, receivedClock);
-			// robber->printVector();
 
 			int updatedClock = robber->getLamportClock();
 
-			if (status.MPI_SOURCE != rank) // nie wysyla sam do sb bo nikt nie odbiera
+			if (status.MPI_SOURCE != rank) // nie wysyla sam do siebie bo nikt nie odbierze - deadlock
 			{
 				MPI_Send(&updatedClock, 1, MPI_INT, status.MPI_SOURCE, ACK, MPI_COMM_WORLD);
 			}
@@ -97,7 +85,7 @@ void handleMessage(Robber *robber, int rank, int size)
 			Message firstMessageInQue = robber->getFirstMessageFromQue();
 
 			int currentClock = robber->getLamportClock();
-			int responsesAmount = robber->countResponses(); // to musi byc w zmiennej !!!
+			int responsesAmount = robber->countResponses();
 
 			int isMyClockBiggest = robber->isMyClockBiggest(currentClock);
 
@@ -141,7 +129,7 @@ int main(int argc, char **argv)
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-	Robber robber;
+	Robber robber(size);
 
 	thread receiverThread(handleMessage, &robber, rank, size);
 
@@ -163,38 +151,3 @@ int main(int argc, char **argv)
 	receiverThread.join();
 	MPI_Finalize();
 }
-
-// Unit Tests
-// int main(int argc, char **argv)
-// {
-// 	Robber robber;
-
-// robber.insertMessageToQue(Message(1, 3));
-// robber.insertMessageToQue(Message(2, 5));
-// robber.insertMessageToQue(Message(3, 3));
-// robber.insertMessageToQue(Message(4, 21));
-
-// Message firstMessageInQue = robber.getFirstMessageFromQue();
-// cout << firstMessageInQue.sender << endl; // 1
-
-// robber.removeMessageFromQue(1);
-// firstMessageInQue = robber.getFirstMessageFromQue();
-// cout << firstMessageInQue.sender << endl; // 3
-
-// robber.removeMessageFromQue(3);
-// firstMessageInQue = robber.getFirstMessageFromQue();
-// cout << firstMessageInQue.sender << endl; // 2
-
-// 	robber.setLastClock(0, 5);
-// 	robber.setLastClock(1, 3);
-// 	robber.setLastClock(2, 2);
-
-// 	int lowestClockIndex = robber.getLowestClockIndex();
-// 	int clock = robber.getClock(lowestClockIndex);
-// 	int responses = robber.countResponses();
-// 	int isMyClockBiggest = robber.isMyClockBiggest(2);
-
-// 	cout << lowestClockIndex << " " << clock << " " << responses << " " << isMyClockBiggest << endl;
-
-// 	robber.printVector();
-// }

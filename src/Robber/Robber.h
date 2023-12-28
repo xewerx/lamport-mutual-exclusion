@@ -8,7 +8,7 @@ using namespace std;
 class Robber
 {
 public:
-    Robber();
+    Robber(int processes);
 
     int getLamportClock();
     void setLamportClock(int value);
@@ -20,9 +20,7 @@ public:
     Message getFirstMessageFromQue();
 
     // Vector
-    void setLastClock(int index, int clock);
-    int getLowestClockIndex();
-    int getClock(int index);
+    void setLastClock(int sender, int clock);
     bool isMyClockBiggest(int clock);
     int countResponses();
     void printVector();
@@ -30,8 +28,7 @@ public:
 private:
     int lamportClock;
     priority_queue<Message> messagesQue;
-    // TODO: dynamic size
-    std::vector<int> other_clocks = {-1, -1, -1, -1};
+    vector<int> otherClocks;
 };
 
 #endif
