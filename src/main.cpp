@@ -7,6 +7,7 @@
 #include <queue>
 #include <vector>
 #include <mutex>
+#include <condition_variable>
 
 #include "./Robber/Robber.h"
 #include "./constants.h"
@@ -14,10 +15,22 @@
 using namespace std;
 
 mutex mut;
+condition_variable condVariableS;
 
-void criticalSection()
+void criticalSection(int rank, string criticalSectionName)
 {
+	cout << "[" << rank << "]: <SEKCJA KRYTYCZNA " << criticalSectionName << ">" << endl;
 	sleep(3);
+	cout << "[" << rank << "]: <KONIEC SEKCJA KRYTYCZNA " << criticalSectionName << ">" << endl;
+}
+
+bool getRandomBoolean()
+{
+	std::srand(std::time(0));
+
+	int randomValue = std::rand() % 2;
+
+	return (randomValue == 1);
 }
 
 void sendToAll(int size, int clock, TAG tag)
@@ -45,7 +58,7 @@ void handleMessage(Robber *robber, int rank, int size)
 		case REQ:
 		{
 			mut.lock(); // zawsze po wysłaniu sie odblokuje
-			cout << "[" << rank << "]: received REQ " << receivedClock << " from [" << status.MPI_SOURCE << "]" << endl;
+			// cout << "[" << rank << "]: received REQ " << receivedClock << " from [" << status.MPI_SOURCE << "]" << endl;
 
 			robber->insertMessageToQue(Message(status.MPI_SOURCE, receivedClock));
 
@@ -62,7 +75,7 @@ void handleMessage(Robber *robber, int rank, int size)
 		case RELEASE:
 		{
 			mut.lock();
-			cout << "[" << rank << "]: received RELEASE " << receivedClock << " from [" << status.MPI_SOURCE << "]" << endl;
+			// cout << "[" << rank << "]: received RELEASE " << receivedClock << " from [" << status.MPI_SOURCE << "]" << endl;
 
 			robber->removeMessageFromQue(status.MPI_SOURCE);
 
@@ -75,7 +88,7 @@ void handleMessage(Robber *robber, int rank, int size)
 		case ACK:
 		{
 			mut.lock();
-			cout << "[" << rank << "]: received ACK " << receivedClock << " from [" << status.MPI_SOURCE << "]" << endl;
+			// cout << "[" << rank << "]: received ACK " << receivedClock << " from [" << status.MPI_SOURCE << "]" << endl;
 
 			// Aktualizacja wektora zegarow innych procesow
 			robber->setLastClock(status.MPI_SOURCE, receivedClock);
@@ -86,7 +99,6 @@ void handleMessage(Robber *robber, int rank, int size)
 		}
 
 		// sprawdz warunki i wejdz do sekcji
-		// TODO: refactor do uzywania conditional variable
 		if (robber->isInterestedInCriticalSection)
 		{
 			Message firstMessageInQue = robber->getFirstMessageFromQue();
@@ -96,26 +108,39 @@ void handleMessage(Robber *robber, int rank, int size)
 
 			int isMyClockBiggest = robber->isMyClockBiggest(currentClock);
 
-			cout << "[" << rank << "]: RANK " << firstMessageInQue.sender << " " << responsesAmount << " " << currentClock << " " << isMyClockBiggest << endl;
-			robber->printVector();
+			// cout << "[" << rank << "]: RANK " << firstMessageInQue.sender << " " << responsesAmount << " " << currentClock << " " << isMyClockBiggest << endl;
+			// robber->printVector();
 
 			// wlasne zadanie na szczycie kolejki    i    mamy ack od wszystkich pozostalych ze starszym timestamp
 			if (firstMessageInQue.sender == rank && (responsesAmount == size - 1) && isMyClockBiggest)
 			{
-				cout << "[" << rank << "]: <SEKCJA KRYTYCZNA>" << endl;
-
-				criticalSection();
-
-				robber->isInterestedInCriticalSection = false;
-				robber->removeMessageFromQue(rank);
-				int clock = robber->getLamportClock();
-
-				sendToAll(size, clock, RELEASE);
-
-				cout << "[" << rank << "]: <KONIEC SEKCJA KRYTYCZNA>" << endl;
+				std::lock_guard<std::mutex> lock(mut);
+				condVariableS.notify_one();
 			}
 		}
 	}
+}
+
+void requestForS(Robber *robber, int size)
+{
+	robber->isInterestedInCriticalSection = true;
+	int clock = robber->incrementLamportClock();
+	sendToAll(size, clock, REQ);
+}
+
+void waitForS()
+{
+	std::unique_lock<std::mutex> lock(mut);
+	condVariableS.wait(lock);
+}
+
+void releaseS(Robber *robber, int size, int rank)
+{
+	robber->isInterestedInCriticalSection = false;
+	robber->removeMessageFromQue(rank);
+	int clock = robber->getLamportClock();
+
+	sendToAll(size, clock, RELEASE);
 }
 
 int main(int argc, char **argv)
@@ -130,7 +155,7 @@ int main(int argc, char **argv)
 	const int N = atoi(argv[2]);
 
 	int rank;
-	int size;
+	int size; // K
 	int provided;
 
 	MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
@@ -141,15 +166,21 @@ int main(int argc, char **argv)
 
 	thread receiverThread(handleMessage, &robber, rank, size);
 
-	// Proces 0 i 2 chce wejsc do sekcji krytycznej
-	if (rank == 0 || rank == 2)
-	{
-		robber.isInterestedInCriticalSection = true;
-		int clock = robber.incrementLamportClock();
+	// START MAIN FLOW
 
-		sendToAll(size, clock, REQ);
+	// SEKCJA KRYTYCZNA 1 - pobranie S
+	requestForS(&robber, size);
+	waitForS();
+	criticalSection(rank, "S"); // krazenie po miescie
+	bool isPersonWithGoodMoodFound = getRandomBoolean();
+	releaseS(&robber, size, rank); // TODO: async
+
+	if (isPersonWithGoodMoodFound)
+	{
+		cout << "FOUND" << endl; // take N
 	}
 
+	// END MAIN FLOW
 	receiverThread.join();
 	MPI_Finalize();
 }
