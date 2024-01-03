@@ -7,7 +7,8 @@
 
 Robber::Robber(int processes)
 {
-    isInterestedInCriticalSection = false;
+    isInterestedInS = false;
+    isInterestedInN = false;
     lamportClock = 0;
     otherClocks.resize(processes, -1); // puste miejsce wypełnij -1
 }
@@ -27,33 +28,33 @@ int Robber::incrementLamportClock()
     return ++lamportClock;
 }
 
-void Robber::insertMessageToQue(Message message)
+void Robber::insertMessageToQueS(Message message)
 {
-    messagesQue.push(message);
+    messagesQueS.push(message);
 }
 
-void Robber::removeMessageFromQue(int sender)
+void Robber::removeMessageFromQueS(int sender)
 {
     priority_queue<Message> tempQueue;
 
     // Przeszukiwanie oryginalnej kolejki
-    while (!messagesQue.empty())
+    while (!messagesQueS.empty())
     {
-        Message mess = messagesQue.top();
+        Message mess = messagesQueS.top();
         if (mess.sender != sender)
         {
             tempQueue.push(mess);
         }
-        messagesQue.pop();
+        messagesQueS.pop();
     }
 
     // Przywracanie elementów do oryginalnej kolejki
-    messagesQue = move(tempQueue);
+    messagesQueS = move(tempQueue);
 }
 
-Message Robber::getFirstMessageFromQue()
+Message Robber::getFirstMessageFromQueS()
 {
-    return messagesQue.top();
+    return messagesQueS.top();
 }
 
 void Robber::setLastClock(int sender, int clock)
@@ -84,6 +85,36 @@ bool Robber::isMyClockBiggest(int clock)
     }
 
     return true;
+}
+
+void Robber::insertMessageToQueN(Message message)
+{
+    messagesQueN.push(message);
+}
+
+void Robber::removeMessageFromQueN(int sender)
+{
+    priority_queue<Message> tempQueue;
+
+    // Przeszukiwanie oryginalnej kolejki
+    while (!messagesQueN.empty())
+    {
+        Message mess = messagesQueN.top();
+        if (mess.sender != sender)
+        {
+            tempQueue.push(mess);
+        }
+        messagesQueN.pop();
+    }
+
+    // Przywracanie elementów do oryginalnej kolejki
+    messagesQueN = move(tempQueue);
+}
+
+Message Robber::getFirstMessageFromQueN()
+{
+    if (!messagesQueN.empty())
+        return messagesQueN.top();
 }
 
 void Robber::printVector()

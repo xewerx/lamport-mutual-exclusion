@@ -1,1 +1,1 @@
-mpic++ src/main.cpp src/Robber/Robber.cpp -o bin/main -std=c++14 -lpthread
+mpic++ src/main.cpp src/Robber/Robber.cpp src/Util/Util.cpp -o bin/main -std=c++14 -lpthread

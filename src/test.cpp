@@ -39,28 +39,28 @@ void testQueue()
 {
     Robber robber(1);
 
-    robber.insertMessageToQue(Message(1, 3));
-    robber.insertMessageToQue(Message(2, 5));
-    robber.insertMessageToQue(Message(3, 3));
-    robber.insertMessageToQue(Message(4, 21));
+    robber.insertMessageToQueS(Message(1, 3));
+    robber.insertMessageToQueS(Message(2, 5));
+    robber.insertMessageToQueS(Message(3, 3));
+    robber.insertMessageToQueS(Message(4, 21));
 
-    Message firstMessageInQue = robber.getFirstMessageFromQue();
+    Message firstMessageInQue = robber.getFirstMessageFromQueS();
 
     if (firstMessageInQue.sender == 1)
         cout << "#1 testQueue: passed" << endl;
     else
         cout << "#1 testQueue: failed" << endl;
 
-    robber.removeMessageFromQue(1);
-    firstMessageInQue = robber.getFirstMessageFromQue();
+    robber.removeMessageFromQueS(1);
+    firstMessageInQue = robber.getFirstMessageFromQueS();
 
     if (firstMessageInQue.sender == 3)
         cout << "#2 testQueue: passed" << endl;
     else
         cout << "#2 testQueue: failed" << endl;
 
-    robber.removeMessageFromQue(3);
-    firstMessageInQue = robber.getFirstMessageFromQue();
+    robber.removeMessageFromQueS(3);
+    firstMessageInQue = robber.getFirstMessageFromQueS();
 
     if (firstMessageInQue.sender == 2)
         cout << "#1 testQueue: passed" << endl;
