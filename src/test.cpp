@@ -93,7 +93,25 @@ void testVector()
 
 int main(int argc, char **argv)
 {
-    testQueue();
-    testVector();
-    testLamportClock();
+    // testQueue();
+    // testVector();
+    // testLamportClock();
+
+    Robber robber(5);
+
+    // robber.insertMessageToQueS(Message(1, 1));
+    // robber.insertMessageToQueS(Message(2, 5));
+    // robber.insertMessageToQueS(Message(3, 10));
+    // robber.insertMessageToQueS(Message(4, 15));
+
+    // bool result = robber.checkIfMessageIsInFirstN(2, 2);
+
+    robber.setLastClock(0, 0);
+    robber.setLastClock(1, 5);
+    robber.setLastClock(2, 10);
+    robber.setLastClock(3, 15);
+    robber.setLastClock(4, 20);
+
+    bool result = robber.isMyClockInNBiggest(22, 3);
+    cout << "RESULT: " << result;
 }

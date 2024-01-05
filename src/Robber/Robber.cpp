@@ -5,10 +5,12 @@
 
 #include "./Robber.h"
 
-Robber::Robber(int processes)
+Robber::Robber(int processes, int S, int N)
 {
     isInterestedInS = false;
     isInterestedInN = false;
+    amountS = S;
+    amountN = N;
     lamportClock = 0;
     otherClocks.resize(processes, -1); // puste miejsce wypełnij -1
 }
@@ -52,9 +54,50 @@ void Robber::removeMessageFromQueS(int sender)
     messagesQueS = move(tempQueue);
 }
 
-Message Robber::getFirstMessageFromQueS()
+bool Robber::isMessageInTopInQueS(int sender, int n)
 {
-    return messagesQueS.top();
+    priority_queue<Message> tempQueue = messagesQueS;
+
+    // Przeszukiwanie oryginalnej kolejki
+    for (int i = 0; i < n; i++)
+    {
+        Message mess = tempQueue.top();
+        if (mess.sender == sender)
+        {
+            return true;
+        }
+        tempQueue.pop();
+    }
+
+    return false;
+}
+
+bool Robber::isQueSEmpty()
+{
+    return messagesQueS.empty();
+}
+
+bool Robber::isMessageInTopInQueN(int sender, int n)
+{
+    priority_queue<Message> tempQueue = messagesQueN;
+
+    // Przeszukiwanie oryginalnej kolejki
+    for (int i = 0; i < n; i++)
+    {
+        Message mess = tempQueue.top();
+        if (mess.sender == sender)
+        {
+            return true;
+        }
+        tempQueue.pop();
+    }
+
+    return false;
+}
+
+bool Robber::isQueNEmpty()
+{
+    return messagesQueN.empty();
 }
 
 void Robber::setLastClock(int sender, int clock)
@@ -74,17 +117,20 @@ int Robber::countResponses()
     return responsesAmount;
 }
 
-bool Robber::isMyClockBiggest(int clock)
+bool Robber::isMyClockInNBiggest(int clock, int n) // sprawdza czy clock posrod na najwiekszych clockow
 {
-    for (int el : otherClocks)
+    vector<int> otherClocksCopy = otherClocks;
+    std::sort(otherClocksCopy.rbegin(), otherClocksCopy.rend());
+
+    for (int i = 0; i < n; i++)
     {
-        if (el == -1)
-            continue;
-        if (el > clock)
-            return false;
+        if (clock >= otherClocksCopy[i])
+        {
+            return true;
+        }
     }
 
-    return true;
+    return false;
 }
 
 void Robber::insertMessageToQueN(Message message)
@@ -109,12 +155,6 @@ void Robber::removeMessageFromQueN(int sender)
 
     // Przywracanie elementów do oryginalnej kolejki
     messagesQueN = move(tempQueue);
-}
-
-Message Robber::getFirstMessageFromQueN()
-{
-    if (!messagesQueN.empty())
-        return messagesQueN.top();
 }
 
 void Robber::printVector()

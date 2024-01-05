@@ -13,4 +13,4 @@
   zeby zapętlić program wymagane będzie wprowadzenie stanów,
   mozna zacząć od jednego "obiegu" dla kazdego procesu
 
-- diagram stanów programu
+- diagram stanów programu i sprawko
