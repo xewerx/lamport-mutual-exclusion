@@ -6,7 +6,7 @@
 
 void testLamportClock()
 {
-    Robber robber(1);
+    Robber robber(1, 1, 1);
 
     int lamportClock = robber.getLamportClock();
 
@@ -37,44 +37,47 @@ void testLamportClock()
 
 void testQueue()
 {
-    Robber robber(1);
+    Robber robber(1, 1, 1);
 
-    robber.insertMessageToQueS(Message(1, 3));
-    robber.insertMessageToQueS(Message(2, 5));
-    robber.insertMessageToQueS(Message(3, 3));
-    robber.insertMessageToQueS(Message(4, 21));
+    robber.insertMessageToQueS(Message(1, 10));
+    robber.insertMessageToQueS(Message(2, 15));
+    robber.insertMessageToQueS(Message(3, 20));
+    robber.insertMessageToQueS(Message(4, 25));
 
-    Message firstMessageInQue = robber.getFirstMessageFromQueS();
+    bool result = robber.isMessageInTopInQueS(2, 2);
 
-    if (firstMessageInQue.sender == 1)
+    if (result)
         cout << "#1 testQueue: passed" << endl;
     else
         cout << "#1 testQueue: failed" << endl;
 
-    robber.removeMessageFromQueS(1);
-    firstMessageInQue = robber.getFirstMessageFromQueS();
+    result = robber.isMessageInTopInQueS(3, 2);
 
-    if (firstMessageInQue.sender == 3)
+    if (!result)
         cout << "#2 testQueue: passed" << endl;
     else
         cout << "#2 testQueue: failed" << endl;
 
+    robber.removeMessageFromQueS(1);
+    robber.removeMessageFromQueS(2);
     robber.removeMessageFromQueS(3);
-    firstMessageInQue = robber.getFirstMessageFromQueS();
+    robber.removeMessageFromQueS(4);
 
-    if (firstMessageInQue.sender == 2)
-        cout << "#1 testQueue: passed" << endl;
+    result = robber.isQueSEmpty();
+
+    if (result)
+        cout << "#3 testQueue: passed" << endl;
     else
-        cout << "#1 testQueue: failed" << endl;
+        cout << "#3 testQueue: failed" << endl;
 }
 
 void testVector()
 {
-    Robber robber(4);
+    Robber robber(4, 1, 1);
 
-    robber.setLastClock(0, 5);
-    robber.setLastClock(1, 3);
-    robber.setLastClock(2, 2);
+    robber.setLastClock(0, 10);
+    robber.setLastClock(1, 20);
+    robber.setLastClock(2, 30);
 
     int responses = robber.countResponses();
 
@@ -83,9 +86,16 @@ void testVector()
     else
         cout << "#1 testVector: failed" << endl;
 
-    int isMyClockBiggest = robber.isMyClockBiggest(2);
+    bool isMyClockBiggest = robber.isMyClockInNBiggest(35, 2);
 
-    if (isMyClockBiggest == 0)
+    if (isMyClockBiggest)
+        cout << "#2 testVector: passed" << endl;
+    else
+        cout << "#2 testVector: failed" << endl;
+
+    isMyClockBiggest = robber.isMyClockInNBiggest(15, 2);
+
+    if (!isMyClockBiggest)
         cout << "#2 testVector: passed" << endl;
     else
         cout << "#2 testVector: failed" << endl;
@@ -93,25 +103,7 @@ void testVector()
 
 int main(int argc, char **argv)
 {
-    // testQueue();
-    // testVector();
-    // testLamportClock();
-
-    Robber robber(5);
-
-    // robber.insertMessageToQueS(Message(1, 1));
-    // robber.insertMessageToQueS(Message(2, 5));
-    // robber.insertMessageToQueS(Message(3, 10));
-    // robber.insertMessageToQueS(Message(4, 15));
-
-    // bool result = robber.checkIfMessageIsInFirstN(2, 2);
-
-    robber.setLastClock(0, 0);
-    robber.setLastClock(1, 5);
-    robber.setLastClock(2, 10);
-    robber.setLastClock(3, 15);
-    robber.setLastClock(4, 20);
-
-    bool result = robber.isMyClockInNBiggest(22, 3);
-    cout << "RESULT: " << result;
+    testQueue();
+    testVector();
+    testLamportClock();
 }

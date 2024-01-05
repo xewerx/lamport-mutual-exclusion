@@ -157,6 +157,18 @@ void Robber::removeMessageFromQueN(int sender)
     messagesQueN = move(tempQueue);
 }
 
+void Robber::printQue()
+{
+    priority_queue<Message> tempQueue = messagesQueS;
+
+    while (!tempQueue.empty())
+    {
+        cout << tempQueue.top().sender << " ";
+        tempQueue.pop();
+    }
+    cout << endl;
+}
+
 void Robber::printVector()
 {
     cout << "VECTOR: ";

@@ -28,6 +28,8 @@ public:
     bool isMessageInTopInQueN(int sender, int n);
     bool isQueNEmpty();
 
+    void printQue();
+
     // Vector
     void setLastClock(int sender, int clock);
     bool isMyClockInNBiggest(int clock, int n);
