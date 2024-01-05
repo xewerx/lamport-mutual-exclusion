@@ -267,6 +267,7 @@ int main(int argc, char **argv)
 
 	if (isPersonWithGoodMoodFound)
 	{
+		// SEKCJA KRYTYCZNA 2 - pobranie N
 		requestForN(&robber, size);
 		waitForN();
 		criticalSection(rank, "N"); // laboratorium
