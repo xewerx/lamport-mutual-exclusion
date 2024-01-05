@@ -255,27 +255,31 @@ int main(int argc, char **argv)
 	Robber robber(size, S, N);
 
 	thread receiverThread(handleMessage, &robber, rank, size);
+	thread releaseSThread;
 
 	// START MAIN FLOW
-
-	// SEKCJA KRYTYCZNA 1 - pobranie S
-	requestForS(&robber, size);
-	waitForS();
-	criticalSection(rank, "S"); // krazenie po miescie
-	bool isPersonWithGoodMoodFound = util->getRandomBoolean();
-	thread releaseSThread(releaseS, &robber, size, rank); // S zwracane po jakims czasie
-
-	if (isPersonWithGoodMoodFound)
+	while (1)
 	{
-		requestForN(&robber, size);
-		waitForN();
-		criticalSection(rank, "N"); // laboratorium
-		releaseN(&robber, size, rank);
-	}
+		// SEKCJA KRYTYCZNA 1 - pobranie S
+		requestForS(&robber, size);
+		waitForS();
+		criticalSection(rank, "S"); // krazenie po miescie
+		bool isPersonWithGoodMoodFound = util->getRandomBoolean();
+		thread releaseSThread(releaseS, &robber, size, rank); // S zwracane po jakims czasie
 
+		if (isPersonWithGoodMoodFound)
+		{
+			// SEKCJA KRYTYCZNA 2 - pobranie N
+			requestForN(&robber, size);
+			waitForN();
+			criticalSection(rank, "N"); // laboratorium
+			releaseN(&robber, size, rank);
+		}
+
+		releaseSThread.join();
+	}
 	// END MAIN FLOW
 
-	releaseSThread.join();
 	receiverThread.join();
 	MPI_Finalize();
 }
